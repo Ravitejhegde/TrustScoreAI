@@ -1,6 +1,14 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI
+from fastapi import UploadFile
+from fastapi import File
+
 from fastapi.middleware.cors import CORSMiddleware
+
 import shutil
+
+from services.analysis_pipeline import analyze_image
+
+from services.results_formatter import format_results
 
 app = FastAPI()
 
@@ -8,7 +16,11 @@ app.add_middleware(
 
     CORSMiddleware,
 
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+
+        "http://localhost:5173"
+
+    ],
 
     allow_credentials=True,
 
@@ -18,17 +30,24 @@ app.add_middleware(
 
 )
 
-@app.post("/upload")
 
-async def upload_image(
+@app.post("/analyze")
+
+async def analyze(
 
     image: UploadFile = File(...)
 
 ):
 
-    file_path = f"uploads/{image.filename}"
+    path = f"uploads/{image.filename}"
 
-    with open(file_path, "wb") as buffer:
+    with open(
+
+        path,
+
+        "wb"
+
+    ) as buffer:
 
         shutil.copyfileobj(
 
@@ -38,10 +57,16 @@ async def upload_image(
 
         )
 
-    return {
+    data = analyze_image(
 
-        "filename": image.filename,
+        path
 
-        "message": "Image uploaded successfully"
+    )
 
-    }
+    result = format_results(
+
+        data
+
+    )
+
+    return result
