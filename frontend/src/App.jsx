@@ -1,78 +1,174 @@
 import { useState } from "react";
-
 import axios from "axios";
+import "./App.css";
 
 function App() {
 
-  const [file, setFile] = useState(null);
+  const [image, setImage] = useState(null);
 
-  const [message, setMessage] = useState("");
+  const [result, setResult] = useState(null);
 
-  function chooseImage(event) {
+  const [loading, setLoading] = useState(false);
 
-    setFile(
+  function handleImage(event) {
 
-      event.target.files[0]
+    const selectedFile = event.target.files[0];
 
-    );
+    console.log(selectedFile);
+
+    setImage(selectedFile);
 
   }
 
-  async function uploadImage() {
+  async function analyzeImage() {
 
-    if (!file) {
+    console.log(image);
 
-      alert("Choose image first");
+    if (!image) {
+
+      alert("Please select an image");
 
       return;
 
     }
 
-    const formData = new FormData();
+    setLoading(true);
 
-    formData.append(
+    try {
 
-      "image",
+      const formData = new FormData();
 
-      file
+      formData.append(
 
-    );
+        "image",
 
-    const response = await axios.post(
+        image
 
-      "http://127.0.0.1:8000/upload",
+      );
 
-      formData
+      const response = await axios.post(
 
-    );
+        "http://127.0.0.1:8000/analyze",
 
-    setMessage(
+        formData
 
-      response.data.message
+      );
 
-    );
+      console.log(response.data);
+
+      setResult(
+
+        response.data
+
+      );
+
+    }
+
+    catch (error) {
+
+      console.log(error);
+
+      alert(
+
+        "Analysis failed"
+
+      );
+
+    }
+
+    finally {
+
+      setLoading(false);
+
+    }
+
+  }
+
+  async function downloadPDF() {
+
+    if (!image) {
+
+      alert("Please select image");
+
+      return;
+
+    }
+
+    try {
+
+      const formData = new FormData();
+
+      formData.append(
+
+        "image",
+
+        image
+
+      );
+
+      const response = await axios.post(
+
+        "http://127.0.0.1:8000/download-report",
+
+        formData,
+
+        {
+
+          responseType: "blob"
+
+        }
+
+      );
+
+      const url = window.URL.createObjectURL(
+
+        new Blob(
+
+          [response.data]
+
+        )
+
+      );
+
+      const link = document.createElement(
+
+        "a"
+
+      );
+
+      link.href = url;
+
+      link.download = "trustscore_report.pdf";
+
+      document.body.appendChild(
+
+        link
+
+      );
+
+      link.click();
+
+      link.remove();
+
+    }
+
+    catch (error) {
+
+      console.log(error);
+
+      alert(
+
+        "PDF download failed"
+
+      );
+
+    }
 
   }
 
   return (
 
-    <div
-
-      style={{
-
-        height:"100vh",
-
-        display:"flex",
-
-        flexDirection:"column",
-
-        justifyContent:"center",
-
-        alignItems:"center"
-
-      }}
-
-    >
+    <div className="container">
 
       <h1>
 
@@ -80,33 +176,135 @@ function App() {
 
       </h1>
 
+      <p>
+
+        Analyze images and estimate whether they were AI-generated
+
+      </p>
+
       <input
 
         type="file"
 
-        onChange={chooseImage}
+        accept=".jpg,.jpeg,.png,.webp"
+
+        onChange={handleImage}
 
       />
 
+      <br />
+
+      <br />
+
       <button
 
-        onClick={uploadImage}
+        onClick={analyzeImage}
 
       >
 
-        Upload
+        Analyze Image
 
       </button>
 
-      <h3>
+      <button
 
-        {message}
+        onClick={downloadPDF}
 
-      </h3>
+      >
+
+        Download PDF
+
+      </button>
+
+      {loading && (
+
+        <h3>
+
+          Analyzing...
+
+        </h3>
+
+      )}
+
+      {result && (
+
+        <div>
+
+          <h2>
+
+            {result.trust_score}/100
+
+          </h2>
+
+          <h3>
+
+            {result.risk_level}
+
+          </h3>
+
+          <h3>
+
+            Reasons
+
+          </h3>
+
+          <ul>
+
+            {
+
+              result.reasons.map(
+
+                (item,index)=>(
+
+                  <li key={index}>
+
+                    {item}
+
+                  </li>
+
+                )
+
+              )
+
+            }
+
+          </ul>
+
+          <h3>
+
+            Indicators
+
+          </h3>
+
+          <ul>
+
+            {
+
+              result.indicators.map(
+
+                (item,index)=>(
+
+                  <li key={index}>
+
+                    {item}
+
+                  </li>
+
+                )
+
+              )
+
+            }
+
+          </ul>
+
+        </div>
+
+      )}
 
     </div>
 
-  )
+  );
 
 }
 
