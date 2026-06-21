@@ -1,0 +1,3 @@
+import uuid
+
+temp_path = f"temp_{uuid.uuid4()}.jpg"
