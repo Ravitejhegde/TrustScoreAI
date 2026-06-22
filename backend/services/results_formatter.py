@@ -1,31 +1,139 @@
 def format_results(data):
 
-    score = data["score"]["trust_score"]
+    trust_score = 100
 
-    if score <= 30:
+    reasons = []
 
-        risk = "Likely Human"
+    indicators = []
 
-    elif score <= 60:
+    if not data["validation"]["format_match"]:
 
-        risk = "Uncertain"
+        trust_score -= 20
 
-    elif score <= 80:
+        reasons.append(
 
-        risk = "Likely AI Generated"
+            "Format mismatch"
+
+        )
+
+    if data["ela"]["ela_score"] > 40:
+
+        trust_score -= 30
+
+        reasons.append(
+
+            "High ELA score"
+
+        )
+
+    if data["lighting"]["lighting_score"] > 0:
+
+        trust_score -= 10
+
+        reasons.append(
+
+            "Suspicious lighting"
+
+        )
+
+    if data["clone"]["clone_score"] > 10:
+
+        trust_score -= 10
+
+        reasons.append(
+
+            "Repeated patterns"
+
+        )
+
+    if data["texture"]["texture_score"] > 0:
+
+        trust_score -= 10
+
+        reasons.append(
+
+            "Artificial textures"
+
+        )
+
+    if data["background"]["background_score"] > 0:
+
+        trust_score -= 10
+
+        reasons.append(
+
+            "Background anomaly"
+
+        )
+
+    if data["anatomy"]["anatomy_score"] > 0:
+
+        trust_score -= 10
+
+        reasons.append(
+
+            "Anatomy inconsistency"
+
+        )
+
+    indicators.extend(
+
+        data["validation"]["indicators"]
+
+    )
+
+    indicators.extend(
+
+        data["lighting"]["indicators"]
+
+    )
+
+    indicators.extend(
+
+        data["texture"]["indicators"]
+
+    )
+
+    indicators.extend(
+
+        data["background"]["indicators"]
+
+    )
+
+    indicators.extend(
+
+        data["anatomy"]["indicators"]
+
+    )
+
+    trust_score = max(
+
+        0,
+
+        trust_score
+
+    )
+
+    if trust_score >= 80:
+
+        risk_level = "Safe"
+
+    elif trust_score >= 50:
+
+        risk_level = "Uncertain"
 
     else:
 
-        risk = "Highly Likely AI Generated"
+        risk_level = "Suspicious"
 
     return {
 
-        "trust_score": score,
+        "trust_score": trust_score,
 
-        "risk_level": risk,
+        "risk_level": risk_level,
 
-        "reasons": data["score"]["reasons"],
+        "reasons": reasons,
 
-        "indicators": data["validation"]["indicators"]
+        "indicators": indicators
 
     }

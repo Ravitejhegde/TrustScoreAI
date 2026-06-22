@@ -1,6 +1,20 @@
 import { useState } from "react";
+
 import axios from "axios";
+
 import "./App.css";
+
+import Header from "./components/Header";
+
+import UploadBox from "./components/UploadBox";
+
+import ImagePreview from "./components/ImagePreview";
+
+import ResultsCard from "./components/ResultsCard";
+
+import Disclaimer from "./components/Disclaimer";
+
+import History from "./components/History";
 
 function App() {
 
@@ -10,19 +24,19 @@ function App() {
 
   const [loading, setLoading] = useState(false);
 
+  const [history,setHistory] = useState([]);
+
+
   function handleImage(event) {
 
     const selectedFile = event.target.files[0];
-
-    console.log(selectedFile);
 
     setImage(selectedFile);
 
   }
 
-  async function analyzeImage() {
 
-    console.log(image);
+  async function analyzeImage() {
 
     if (!image) {
 
@@ -54,13 +68,39 @@ function App() {
 
       );
 
-      console.log(response.data);
-
       setResult(
 
         response.data
 
       );
+
+      setHistory(
+
+previous => [
+
+{
+
+name:image.name,
+
+score:response.data.trust_score,
+
+risk:response.data.risk_level,
+
+time:new Date().toLocaleTimeString()
+
+},
+
+...previous
+
+]
+
+);
+
+<History
+
+history={history}
+
+/>
 
     }
 
@@ -84,11 +124,16 @@ function App() {
 
   }
 
+
   async function downloadPDF() {
 
     if (!image) {
 
-      alert("Please select image");
+      alert(
+
+        "Please select image"
+
+      );
 
       return;
 
@@ -138,7 +183,9 @@ function App() {
 
       link.href = url;
 
-      link.download = "trustscore_report.pdf";
+      link.download =
+
+        "trustscore_report.pdf";
 
       document.body.appendChild(
 
@@ -166,33 +213,24 @@ function App() {
 
   }
 
+
   return (
 
     <div className="container">
 
-      <h1>
+      <Header />
 
-        TrustScoreAI
+      <UploadBox
 
-      </h1>
-
-      <p>
-
-        Analyze images and estimate whether they were AI-generated
-
-      </p>
-
-      <input
-
-        type="file"
-
-        accept=".jpg,.jpeg,.png,.webp"
-
-        onChange={handleImage}
+        handleImage={handleImage}
 
       />
 
-      <br />
+      <ImagePreview
+
+        image={image}
+
+      />
 
       <br />
 
@@ -226,86 +264,19 @@ function App() {
 
       )}
 
-      {result && (
+      <ResultsCard
 
-        <div>
+        result={result}
 
-          <h2>
+      />
 
-            {result.trust_score}/100
-
-          </h2>
-
-          <h3>
-
-            {result.risk_level}
-
-          </h3>
-
-          <h3>
-
-            Reasons
-
-          </h3>
-
-          <ul>
-
-            {
-
-              result.reasons.map(
-
-                (item,index)=>(
-
-                  <li key={index}>
-
-                    {item}
-
-                  </li>
-
-                )
-
-              )
-
-            }
-
-          </ul>
-
-          <h3>
-
-            Indicators
-
-          </h3>
-
-          <ul>
-
-            {
-
-              result.indicators.map(
-
-                (item,index)=>(
-
-                  <li key={index}>
-
-                    {item}
-
-                  </li>
-
-                )
-
-              )
-
-            }
-
-          </ul>
-
-        </div>
-
-      )}
+      <Disclaimer />
 
     </div>
 
   );
 
 }
+
 
 export default App;

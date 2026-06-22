@@ -1,9 +1,14 @@
 from services.analysis_pipeline import analyze_image
 
+
 result = analyze_image(
 
-    "uploads/image.jpeg"
+    "uploads/sample.png"
 
 )
 
-print(result)
+print(
+
+    result
+
+)
